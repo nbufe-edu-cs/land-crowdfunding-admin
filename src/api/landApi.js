@@ -12,3 +12,21 @@ export function listLands(index, pageSize, userId, status) {
         }
     })
 }
+
+export function saveLand(land) {
+    return request({
+        url: '/land',
+        method: 'post',
+        data: land
+    })
+}
+
+export function deleteLand(landId) {
+    return request({
+        url: '/land',
+        method: 'delete',
+        params: {
+            landId: landId
+        }
+    })
+}

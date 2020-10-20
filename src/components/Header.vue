@@ -1,6 +1,9 @@
 <template>
     <div class="header">
-        <div class="header-title">土地众筹后台管理</div>
+        <div class="header-title">
+            <img src="../assets/images/land.png" alt="" />
+            <p>土地众筹后台管理</p>
+        </div>
         <div class="header-info">管理员 您好！</div>
     </div>
 </template>
@@ -20,6 +23,12 @@ export default {
     &-title {
         font-weight: bolder;
         font-size: 18px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        img {
+            width: 13%;
+        }
     }
 }
 </style>
