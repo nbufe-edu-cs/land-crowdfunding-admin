@@ -82,6 +82,7 @@
                     class="btn-status"
                     size="medium"
                     v-model="status"
+                    @change="getLandList"
                     placeholder="请选择状态"
                 >
                     <el-option
@@ -101,7 +102,11 @@
                     v-model="landName"
                     class="input-with-select"
                 >
-                    <el-button slot="append" icon="el-icon-search"></el-button>
+                    <el-button
+                        slot="append"
+                        icon="el-icon-search"
+                        @click="searchLand()"
+                    ></el-button>
                 </el-input>
             </div>
         </div>
@@ -130,8 +135,8 @@
                 width="100"
             ></el-table-column>
             <el-table-column
-                label="进度"
-                width="60"
+                label="进度(%)"
+                width="80"
                 prop="progress"
             ></el-table-column>
             <el-table-column label="状态" width="80" prop="status">
@@ -155,13 +160,34 @@
             <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-button
+                        type="text"
                         size="mini"
                         @click="handleEdit(scope.$index, scope.row)"
                         >编辑</el-button
                     >
                     <el-button
+                        type="text"
+                        v-if="scope.row.status == 0"
                         size="mini"
-                        type="danger"
+                        @click="updateLandStatus(scope.row.landId, 1)"
+                        >发布</el-button
+                    >
+                    <el-button
+                        type="text"
+                        v-if="scope.row.status == 1"
+                        size="mini"
+                        @click="updateLandStatus(scope.row.landId, 0)"
+                        >结束</el-button
+                    >
+                    <el-button
+                        type="text"
+                        size="mini"
+                        @click="handleOptions(scope.row.landId)"
+                        >选项</el-button
+                    >
+                    <el-button
+                        type="text"
+                        size="mini"
                         @click="handleDelete(scope.row.landId)"
                         >删除</el-button
                     >
@@ -177,7 +203,13 @@
 </template>
 
 <script>
-import { listLands, saveLand, deleteLand } from "../api/landApi";
+import {
+    listLands,
+    saveLand,
+    deleteLand,
+    searchLand,
+    updateLandStatus,
+} from "../api/landApi";
 import Pagination from "../components/Pagination";
 export default {
     name: "Land",
@@ -189,7 +221,7 @@ export default {
             uploadCoverImgVisible: false,
             addVisible: false,
             loading: false,
-            status: 1,
+            status: null,
             currentPage: 1,
             pageSize: 10,
             total: 0,
@@ -209,6 +241,10 @@ export default {
                 {
                     code: 2,
                     desc: "已结束",
+                },
+                {
+                    code: null,
+                    desc: "全部",
                 },
             ],
             rules: {
@@ -254,6 +290,26 @@ export default {
         this.getLandList();
     },
     methods: {
+        handleOptions(landId) {
+            console.log(landId);
+            this.$router.push("/land/option");
+        },
+        updateLandStatus(landId, status) {
+            updateLandStatus(landId, status).then((res) => {
+                if (res.data.code == 200) {
+                    this.getLandList();
+                    if (status == 1) {
+                        this.$notify.success("发布成功");
+                    } else if (status == 0) {
+                        this.$notify.success("土地众筹结束");
+                    }
+                } else {
+                    this.$notify.error(
+                        res.data.msg + "(" + res.data.code + ")"
+                    );
+                }
+            });
+        },
         handleAvatarSuccess(res, file) {
             this.imageUrl = URL.createObjectURL(file.raw);
         },
@@ -313,6 +369,16 @@ export default {
                 }
             });
         },
+        searchLand() {
+            searchLand(this.currentPage, this.pageSize, this.landName).then(
+                (res) => {
+                    if (res.data.code == 200) {
+                        this.landList = res.data.data.records;
+                        this.total = res.data.data.total;
+                    }
+                }
+            );
+        },
         handleEdit(index, row) {
             console.log(index, row);
         },
@@ -338,9 +404,11 @@ export default {
         },
         getCurrentPage(currentPage) {
             this.currentPage = currentPage;
+            this.getLandList();
         },
         getPageSize(pageSize) {
             this.pageSize = pageSize;
+            this.getLandList();
         },
     },
 };
